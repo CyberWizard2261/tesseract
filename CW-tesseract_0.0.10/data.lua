@@ -2,7 +2,6 @@ require("prototypes.categories")
 require("prototypes.items")
 require("prototypes.recipes")
 require("prototypes.entities")
-require("prototypes.tecnologies")
 require("prototypes.equip")
 require("prototypes.signals")
 
