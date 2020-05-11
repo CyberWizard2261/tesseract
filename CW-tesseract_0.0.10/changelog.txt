@@ -1,4 +1,8 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.0.10
+  Changes:
+    - now Tesseract technologies are not modified by mods like Angels Industries and Space Exploration
+---------------------------------------------------------------------------------------------------
 Version: 0.0.9
   Changes:
     - bug fixes
