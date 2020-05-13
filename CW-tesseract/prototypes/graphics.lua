@@ -225,7 +225,14 @@ graphic.logistic_materializer_chest_pic =
 }
 
 
-
+graphic.materializer_connector_pic = 
+{
+	filename = "__CW-tesseract__/graphics/entity/m-connector.png",
+	width = 20,
+	height = 23,
+	scale = 0.56,
+	shift = {-0.12,0.12}
+}
 
 local d_tank_sprite = 
 {
@@ -493,7 +500,15 @@ graphic.teleporter_pic =
 }
 
 
-
+graphic.ghost_pic = 
+{
+	direction_count = 1,
+	filename = "__CW-tesseract__/graphics/entity/void.png",
+	priority = "low",
+	width = 1,
+	height = 1,
+	frame_count = 1,
+}
 
 graphic.teleport_beacon_pic = 
 {

@@ -94,35 +94,42 @@ local function materialize_items(force)
 	if global.tesseract_data[force.index].energy > 0 and valid(global.tesseract_data[force.index].tesseract.altar) then
 		for idx , chest in pairs(global.tesseract_data[force.index].materializer_chests) do
 			if valid(chest.chest) then
-				
-				
-				local inventory = chest.chest.get_inventory(defines.inventory.chest)
-				
-				--force.print(inventory.get_insertable_count(chest.request))
-				local content = inventory.get_contents()
-				local chestContent = 0
-				if content[chest.request] ~= nil then
-					chestContent = content[chest.request]
-				end
-				local stored = 0
-				if	global.tesseract_data[force.index].storages[chest.request] ~= nil then
-					stored = global.tesseract_data[force.index].storages[chest.request].item_count
-				end
-				
-				--force.print(chestContent .. " " .. stored)
-				local transfer = 0
-				if chest.request ~= nil then
-					transfer = math.min((chest.requestCount - chestContent), stored, inventory.get_insertable_count(chest.request))
-				end
-				if transfer > 0 then
-					global.tesseract_data[force.index].storages[chest.request].item_count = global.tesseract_data[force.index].storages[chest.request].item_count - transfer
-					inventory.insert({name = chest.request, count = transfer })
-					if not global.tesseract_data[force.index].storages[chest.request].infinite then
-						force_MD[force.index].item_count = force_MD[force.index].item_count - transfer
+				if valid(chest.m_connector) then
+					local inventory = chest.chest.get_inventory(defines.inventory.chest)
+					local requests = chest.m_connector.get_merged_signals()
+					if requests ~= nil then
+						for _ , request in pairs(requests) do
+							if request.signal.type == "item" then
+								local insertable = inventory.get_insertable_count(request.signal.name)
+								local ts_stored = 0
+								if global.tesseract_data[force.index].storages[request.signal.name] ~= nil then
+									ts_stored = global.tesseract_data[force.index].storages[request.signal.name].item_count
+								end
+								local content = inventory.get_contents()
+								local chestContent = 0
+								if content[request.signal.name] ~= nil then
+									chestContent = content[request.signal.name]
+								end
+								local request_count = 0
+								if request.count ~= nil then
+									request_count = request.count - chestContent
+									
+								end
+								local transfer = math.min(request_count , ts_stored, insertable)
+								if transfer > 0 then
+									global.tesseract_data[force.index].storages[request.signal.name].item_count = global.tesseract_data[force.index].storages[request.signal.name].item_count - transfer
+									inventory.insert({name = request.signal.name, count = transfer })
+									if not global.tesseract_data[force.index].storages[request.signal.name].infinite then
+										force_MD[force.index].item_count = force_MD[force.index].item_count - transfer
+									end
+								end
+							end
+						end
 					end
 				end
-			
 			else
+				global.tesseract_data[force.index].materializer_chests[idx].connector_pole.destroy()
+				global.tesseract_data[force.index].materializer_chests[idx].m_connector.destroy()
 				global.tesseract_data[force.index].materializer_chests[idx] = nil
 				force.print("materializer-chest force nil")
 			end
@@ -413,6 +420,45 @@ local function calc_energy_consumption(force)
 end
 
 
+local function create_connector(main_entity)
+	if valid(main_entity) then
+		local position = main_entity.position
+		local surface = main_entity.surface
+		local force = main_entity.force
+		local player = main_entity.last_user
+		local connector = nil
+		local conn_position = {x = position.x, y = position.y + 0.01}
+		local ghosts = surface.find_entities_filtered{position = position, radius = 0.1 , ghost_name = "CW-materializer-connector"} 
+		if ghosts ~= nil then	
+			for _ , ghost in pairs(ghosts) do
+				ghost.revive()
+				--game.print("revive")
+			end
+			local results = surface.find_entities_filtered{position = position, radius = 0.1 , name = "CW-materializer-connector"} 
+			for _ , result in pairs(results) do
+				if valid(result) then
+					connector = result
+				end
+			end
+		end
+		
+		if connector == nil then
+			--game.print("create")
+			connector = surface.create_entity
+			({
+				name = "CW-materializer-connector", 
+				position = conn_position, 
+				force = force, 
+				fast_replace = true, 
+				player = player,
+				raise_built = true,
+			})
+		end
+		
+		return connector
+	end
+end
+
 local function on_built(evt)
 	if evt.created_entity == nil and evt.entity ~= nil then
 		evt.created_entity = evt.entity
@@ -475,7 +521,13 @@ local function on_built(evt)
 			global.tesseract_data[force.index].desmaterializer_chests[evt.created_entity.unit_number] = evt.created_entity
 			calc_energy_consumption(force)
 		elseif evt.created_entity.name == "CW-ts-materializer-chest" or evt.created_entity.name == "CW-ts-logistic-materializer-chest" then
-			global.tesseract_data[force.index].materializer_chests[evt.created_entity.unit_number] = {chest = evt.created_entity, request = nil, requestCount = 0}
+			
+			local connector = create_connector(evt.created_entity)
+			local connector_pole = surface.create_entity({name = "CW-materializer-pole", position = position, force = force, player = player})
+			
+			connector.connect_neighbour({target_entity = connector_pole, wire = defines.wire_type.green})
+			
+			global.tesseract_data[force.index].materializer_chests[evt.created_entity.unit_number] = {chest = evt.created_entity, m_connector = connector, connector_pole = connector_pole}
 			calc_energy_consumption(force)
 		elseif evt.created_entity.name == "CW-ts-desmaterializer-tank" or evt.created_entity.name == "CW-ts-mini-desmaterializer-tank" then
 			global.tesseract_data[force.index].desmaterializer_tanks[evt.created_entity.unit_number] = evt.created_entity
@@ -526,6 +578,8 @@ local function on_remove(evt)
 			global.tesseract_data[force.index].desmaterializer_chests[evt.entity.unit_number] = nil
 
 		elseif	evt.entity.name == "CW-ts-materializer-chest" or evt.entity.name == "CW-ts-logistic-materializer-chest" then
+			global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number].m_connector.destroy()
+			global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number].connector_pole.destroy()
 			global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number] = nil
 
 		elseif	evt.entity.name == "CW-ts-desmaterializer-tank" or evt.entity.name == "CW-ts-mini-desmaterializer-tank" then
@@ -586,7 +640,6 @@ local function fill_MD(force)
 	calc_energy_production(force)
 end
 
-
 local function init_force(force)
 	if valid(force) and force.name ~= "enemy" and force.name ~= "neutral" then
 		
@@ -601,7 +654,7 @@ local function init_force(force)
 		local wreck = surface.create_entity{name = "big-ship-wreck-1", position = position, force = force, create_build_effect_smoke = false}
 		
 		wreck.insert({name = "CW-tesseract"})
-		
+
 		fill_MD(force)
 	end
 	
@@ -648,17 +701,46 @@ local function on_change()
 	for _ , force in pairs(game.forces) do
 		if valid(force) and force.name ~= "enemy" and force.name ~= "neutral" then
 			for idx , item in pairs(global.tesseract_data[force.index].storages) do
-				if game.item_prototypes[item.name] == nil then
+				if game.item_prototypes[item.name] == nil then 
+					--remove data of any item removed from the game 
 					global.tesseract_data[force.index].storages[idx] = nil
 				end
 			end
 			for idx , fluid in pairs(global.tesseract_data[force.index].tanks) do
 				if game.fluid_prototypes[fluid.name] == nil then
+					--remove data of any fluid removed from the game 
 					global.tesseract_data[force.index].tanks[idx] = nil
 				end
 			end
 			for _, connector in pairs(global.tesseract_data[force.index].connectors) do
 				connector.get_or_create_control_behavior().parameters = nil
+			end
+			
+			
+			for idx , materializer_chest in pairs(global.tesseract_data[force.index].materializer_chests) do
+				if valid(materializer_chest.chest) then
+					if not valid(materializer_chest.m_connector) then
+						local connector =  create_connector(materializer_chest.chest)
+						global.tesseract_data[force.index].materializer_chests[idx].m_connector = connector
+					end
+					if not valid(materializer_chest.connector_pole) then
+						local surface = materializer_chest.chest.surface
+						local player = materializer_chest.chest.last_user
+						local position = materializer_chest.chest.position
+						local pole = surface.create_entity{name = "CW-materializer-pole", player = player, position = position, force = force, create_build_effect_smoke = false}
+						global.tesseract_data[force.index].materializer_chests[idx].connector_pole = pole
+						pole.connect_neighbour({wire = defines.wire_type.green, target_entity = global.tesseract_data[force.index].materializer_chests[idx].m_connector})
+					end
+					if global.tesseract_data[force.index].materializer_chests[idx].request ~= nil then
+						local connector = global.tesseract_data[force.index].materializer_chests[idx].m_connector
+						local request = global.tesseract_data[force.index].materializer_chests[idx].request
+						local count = global.tesseract_data[force.index].materializer_chests[idx].requestCount
+						local control = connector.get_or_create_control_behavior()
+						control.set_signal(1,{signal= {type = "item", name = request}, count = count})
+						global.tesseract_data[force.index].materializer_chests[idx].request = nil
+						global.tesseract_data[force.index].materializer_chests[idx].requestCount = nil
+					end
+				end
 			end
 		end
 	end

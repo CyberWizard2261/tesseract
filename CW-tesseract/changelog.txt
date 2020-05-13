@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.0.11
+  Changes:
+    - localization fixes
+    - added an option to hide the window
+    - materializer chests now can request multiple items
+    - materializer chests can receive request signals
+---------------------------------------------------------------------------------------------------
 Version: 0.0.10
   Changes:
     - now Tesseract technologies are not modified by mods like Angels Industries and Space Exploration
@@ -10,7 +17,7 @@ Version: 0.0.9
 Version: 0.0.8
   Changes:
     - performance improvements
-    - materializer tanks now auto-select the fluid based on connected entities
+    - materializer tanks can now auto-select the fluid based on connected entities
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.7
   Changes:
