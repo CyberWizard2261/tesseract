@@ -1,10 +1,13 @@
 require("script.runtime_functions")
-
-
+local gui_location
 
 function recreate_player_GUI(player)
 	destroyGUI(player)
-	player.gui.screen.add({type = "frame", name = "tesseractGUI", direction = "vertical", caption = {"GUIdescription.tesseractGUI"}})
+	if gui_location == nil then
+		gui_location = {1,1}
+	end
+	player.gui.screen.add({type = "frame", name = "tesseractGUI", direction = "vertical", caption = {"GUIdescription.tesseractGUI"} ,tooltip = {"GUIdescription.ts-hide-window-tip"} })
+	player.gui.screen.tesseractGUI.location = gui_location
 	player.gui.screen.tesseractGUI.add({type = "label", name = "energy", caption = "0MJ/0MJ", tooltip = {"GUIdescription.ts-energy-tip"}})
 	player.gui.screen.tesseractGUI.add({type = "progressbar", name = "energyBar", value = 0, tooltip = {"GUIdescription.ts-energy-tip"}})
 	player.gui.screen.tesseractGUI.add({type = "label", name = "inventory", caption = "0/0", tooltip = {"GUIdescription.ts-inventory-tip"}})
@@ -26,6 +29,7 @@ end
 
 function destroyGUI(player)
 	if valid(player.gui.screen.tesseractGUI) then
+		gui_location = player.gui.screen.tesseractGUI.location
 		player.gui.screen.tesseractGUI.destroy()
 	end
 end
@@ -113,7 +117,7 @@ local function on_gui_click(evt)
 		if valid(player.gui.center.tsStorage) then
 			player.gui.center.tsStorage.destroy()
 		end
-
+--[[
 	elseif evt.element.name == "CWMaterializerChestOK" then
 		if valid(player.gui.center.MaterializerChest) then
 			local selected_entity = player_MD[player.index].selected_entity
@@ -123,7 +127,7 @@ local function on_gui_click(evt)
 			end
 			player.gui.center.MaterializerChest.destroy()
 		end
-
+--]]
 	elseif evt.element.name == "CWMaterializerTankOK" then
 		if valid(player.gui.center.MaterializerTank) then
 			local selected_entity = player_MD[player.index].selected_entity
@@ -179,7 +183,7 @@ local function on_gui_click(evt)
 		force_MD[player.force.index].recountItems = true
 	end
 end
-
+--[[
 local function gui_materizer_chest(player , main_entity)
 	if player.force == main_entity.force and player.gui.center.MaterializerChest == nil then 
 		player.gui.center.add({type = "frame", name = "MaterializerChest", direction = "vertical", caption = {"GUIdescription.MaterializerChest"}})
@@ -192,7 +196,7 @@ local function gui_materizer_chest(player , main_entity)
 	
 	end
 end
-
+--]]
 local function gui_materizer_tank(player , main_entity)
 	if player.force == main_entity.force and player.gui.center.MaterializerTank == nil then 
 		player.gui.center.add({type = "frame", name = "MaterializerTank", direction = "vertical", caption = {"GUIdescription.MaterializerTank"}})
@@ -241,13 +245,16 @@ end
 
 
 
-local function on_shift_click(event)
+local function configure_input(event)
 	local player = game.players[event.player_index]
 	local main_entity = player.selected
-	if valid(main_entity) then
+	if valid(main_entity) and player.force == main_entity.force then
+	
 		if main_entity.name == "CW-ts-materializer-chest" or main_entity.name == "CW-ts-logistic-materializer-chest" then
-			player_MD[player.index].selected_entity = main_entity
-			gui_materizer_chest(player , main_entity)
+			--player_MD[player.index].selected_entity = main_entity
+			player.opened = global.tesseract_data[player.force.index].materializer_chests[main_entity.unit_number].m_connector
+		elseif main_entity.name == "CW-materializer-connector" then
+			player.opened = main_entity
 		elseif main_entity.name == "CW-ts-materializer-tank" or main_entity.name == "CW-ts-mini-materializer-tank"  then
 			player_MD[player.index].selected_entity = main_entity
 			gui_materizer_tank(player , main_entity)
@@ -261,9 +268,17 @@ local function on_shift_click(event)
 	end
 end
 
+local function toggle_window(event)
+	local player = game.players[event.player_index]
+	if valid(player.gui.screen.tesseractGUI) then
+		destroyGUI(player)
+	else
+		recreate_player_GUI(player)
+	end
+end
 script.on_event(defines.events.on_gui_click, on_gui_click)
-script.on_event("CW-configure-input", on_shift_click)
-
+script.on_event("CW-configure-input", configure_input)
+script.on_event("CW-toggle-Tesseract-window", toggle_window)
 
 
 

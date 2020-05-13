@@ -271,6 +271,15 @@ data:extend
 		place_result = "CW-ts-teleport-beacon",
 	},
 	
+	{
+		type = "item",
+		name = "CW-ghost",
+		icon = "__CW-tesseract__/graphics/icons/void.png",
+		icon_size = 1,
+		stack_size = 20,
+		subgroup = "CW-ts-logistic",
+		order = "zz",
+	},
 	
 	
 	

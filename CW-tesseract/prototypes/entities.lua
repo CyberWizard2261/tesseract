@@ -277,11 +277,11 @@ local materializer_chest = table.deepcopy(data.raw.container["steel-chest"])
 materializer_chest.name = "CW-ts-materializer-chest"
 materializer_chest.loot = {{item = "CW-ts-fragment",count_min = 5, count_max = 5}}
 materializer_chest.max_health = 300
+materializer_chest.circuit_wire_max_distance = 0
 materializer_chest.minable.result = "CW-ts-materializer-chest"
 materializer_chest.inventory_size = 100
 materializer_chest.enable_inventory_bar = false
 materializer_chest.next_upgrade = ""
---materializer_chest.fast_replaceable_group = ""
 materializer_chest.icon = "__CW-tesseract__/graphics/icons/m-chest.png"
 materializer_chest.icon_size = 64
 materializer_chest.picture = graphic.materializer_chest_pic
@@ -318,6 +318,7 @@ local logistic_materializer_chest = table.deepcopy(data.raw["logistic-container"
 logistic_materializer_chest.name = "CW-ts-logistic-materializer-chest"
 logistic_materializer_chest.loot = {{item = "CW-ts-fragment",count_min = 5, count_max = 5}}
 logistic_materializer_chest.max_health = 300
+logistic_materializer_chest.circuit_wire_max_distance = 0
 logistic_materializer_chest.minable.result = "CW-ts-logistic-materializer-chest"
 logistic_materializer_chest.inventory_size = 100
 logistic_materializer_chest.enable_inventory_bar = false
@@ -326,6 +327,102 @@ logistic_materializer_chest.icon = "__CW-tesseract__/graphics/icons/lm-chest.png
 logistic_materializer_chest.icon_size = 64
 logistic_materializer_chest.picture = graphic.logistic_materializer_chest_pic
 logistic_materializer_chest.animation = nil
+
+local materializer_connector_pole = table.deepcopy(data.raw["electric-pole"]["big-electric-pole"])
+materializer_connector_pole.name = "CW-materializer-pole"
+materializer_connector_pole.create_ghost_on_death = false
+materializer_connector_pole.corpse = nil
+materializer_connector_pole.collision_mask = {}
+materializer_connector_pole.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
+materializer_connector_pole.selection_box = {{-0.4, -0.4}, {0.4, 0.4}}
+materializer_connector_pole.selectable_in_game = false
+materializer_connector_pole.fast_replaceable_group = ""
+materializer_connector_pole.next_upgrade = ""
+materializer_connector_pole.placeable_by = {item = "iron-plate",count = 0 }
+materializer_connector_pole.flags = {"not-blueprintable","player-creation"}
+materializer_connector_pole.minable.result = nil
+materializer_connector_pole.maximum_wire_distance = 0.5
+materializer_connector_pole.supply_area_distance = 0.1
+materializer_connector_pole.active_picture = nil
+materializer_connector_pole.draw_copper_wires = false
+materializer_connector_pole.draw_circuit_wires = false
+materializer_connector_pole.radius_visualisation_picture = nil
+materializer_connector_pole.pictures = graphic.ghost_pic
+materializer_connector_pole.connection_points = 
+{
+	{
+		shadow = {
+			green = {0,0},
+			red = {0,0}
+		},
+		wire = {
+			green = {0,0},
+			red = {0,0}
+		},
+	},
+}
+
+local materializer_connector = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
+materializer_connector.name = "CW-materializer-connector"
+materializer_connector.flags = {"not-rotatable", "placeable-off-grid", "player-creation",}
+materializer_connector.selection_priority = 51
+materializer_connector.minable.result = nil
+materializer_connector.activity_led_light = nil
+materializer_connector.placeable_by = {item = "CW-ghost", count = 0}
+materializer_connector.circuit_wire_max_distance = 20
+materializer_connector.item_slot_count = 12
+materializer_connector.sprites = graphic.materializer_connector_pic
+materializer_connector.collision_mask = {"doodad-layer"}
+materializer_connector.next_upgrade = ""
+materializer_connector.order = "zz"
+materializer_connector.selection_box = {{-0.3, 0}, {0, 0.3}}
+materializer_connector.circuit_wire_connection_points = 
+{
+	{
+		shadow = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+		wire = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+	},
+	{
+		shadow = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+		wire = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+	},
+	{
+		shadow = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+		wire = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+	},
+	{
+		shadow = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+		wire = {
+			green = {0,-0.05},
+			red = {-0.2,-0.05}
+		},
+	},
+}
+
+
+
+
 
 
 local wreck = table.deepcopy(data.raw.container["big-ship-wreck-1"])
@@ -468,7 +565,7 @@ connector.sprites = graphic.connector_pic
 
 
 
-data:extend({teleport,teleport_beacon})
+data:extend({teleport,teleport_beacon,materializer_connector,materializer_connector_pole})
 data:extend({logistic_desmaterializer_chest,logistic_materializer_chest})
 data:extend({desmaterializer_tank,materializer_tank,connector, mini_materializer_tank, mini_desmaterializer_tank})
 data:extend({tesseract,ts_box,ts_lab,materializer_chest,desmaterializer_chest,wreck})

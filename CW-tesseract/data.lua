@@ -12,4 +12,9 @@ data:extend({
 		name = "CW-configure-input",
 		key_sequence = "SHIFT + mouse-button-1",
 	},
+	{
+		type = "custom-input",
+		name = "CW-toggle-Tesseract-window",
+		key_sequence = "SHIFT + W",
+	},
 })
