@@ -332,10 +332,22 @@ data:extend
 	
 })
 
-
-
-
-
+if mods["CW-orbital-solar-power"] then
+	data:extend
+	({
+		{
+			type = "item",
+			name = "CW-ts-solar-satellite",
+			icon = "__CW-orbital-solar-power__/graphics/icons/solar-satelite.png",
+			icon_size = 32,
+			
+			stack_size = 1,
+			--rocket_launch_product = {name = "CW-solar-satelite-beacon", amount = 1},
+			subgroup = "CW-ts-satellite",
+			order = "a1",
+		},
+	})
+end
 
 
 

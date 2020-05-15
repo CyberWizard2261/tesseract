@@ -421,7 +421,27 @@ data:extend
 })
 
 
+if mods["CW-orbital-solar-power"] then
+	data:extend
+	({
+		{
+			type = "recipe",
+			name = "CW-ts-solar-satellite",
+			enabled = false,
+			energy_required = 2,
+			category ="crafting",
 
+			ingredients =
+			{
+				{"satellite",1},
+				{"CW-solar-array",8},
+				{"CW-ts-power-leech-pole-2",1},
+			},
+			result = "CW-ts-solar-satellite",
+		},		
+	})
+	
+end
 
 
 

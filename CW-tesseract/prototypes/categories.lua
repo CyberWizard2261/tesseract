@@ -40,6 +40,12 @@ data:extend
 		order="f1"
 	},
 	{
+		type="item-subgroup",
+		name="CW-ts-satellite",
+		group="CW-tesseract",
+		order="g1"
+	},
+	{
 		type = "item-subgroup",
 		name = "CW-tesseract-signals",
 		group = "signals",
