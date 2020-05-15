@@ -347,7 +347,7 @@ local function updateTesseracts()
 end
 
 local function calc_energy_production(force)
-	local production = global.tesseract_data[force.index].satellites * 10^7
+	local production = global.tesseract_data[force.index].satellites * 11*10^6
 	force_MD[force.index].energyProduction = production
 end
 
@@ -358,7 +358,7 @@ local function calc_energy_consumption(force)
 						global.tesseract_data[force.index].maxEnergy*2 / 10^4 + 
 						global.tesseract_data[force.index].max_infinite_storages * 10^6
 		
-		for _ , leech in pairs(global.tesseract_data[force.index].power_leeches) do
+		for idx, leech in pairs(global.tesseract_data[force.index].power_leeches) do
 			if valid(leech.pole) then
 				--force.print(leech.pole.name)
 				if leech.pole.name == "CW-ts-power-leech-pole-1" then
@@ -370,10 +370,16 @@ local function calc_energy_consumption(force)
 				elseif leech.pole.name == "CW-ts-power-leech-pole-4" then
 					drain = drain + 125*10^5
 				end
+			else
+				force.print("force remove power leech ".. idx)
+				if valid(leech.interface) then
+					leech.interface.destroy()
+					global.tesseract_data[force.index].power_leeches[idx] = nil
+				end	
 			end
 		end
 
-		for _ , source in pairs(global.tesseract_data[force.index].power_sources) do
+		for idx , source in pairs(global.tesseract_data[force.index].power_sources) do
 			if valid(source.pole) then
 				--force.print(source.pole.name)
 				if source.pole.name == "CW-ts-power-source-pole-1" then
@@ -385,33 +391,60 @@ local function calc_energy_consumption(force)
 				elseif source.pole.name == "CW-ts-power-source-pole-4" then
 					drain = drain + 125*10^5
 				end
+			else
+				force.print("force remove power source ".. idx)
+				if valid(source.interface) then
+					source.interface.destroy()
+					global.tesseract_data[force.index].power_sources[idx] = nil
+				end	
 			end
 		end
 		
-		for _ , desmaterializer_tank in pairs(global.tesseract_data[force.index].desmaterializer_tanks) do
+		for idx , desmaterializer_tank in pairs(global.tesseract_data[force.index].desmaterializer_tanks) do
 			if valid(desmaterializer_tank) then
 				drain = drain + 5*10^5
+			else
+				force.print("force remove desmaterializer tank ".. idx)
+				global.tesseract_data[force.index].desmaterializer_tanks[idx] = nil
 			end
 		end
-		for _ , materializer_tank in pairs(global.tesseract_data[force.index].materializer_tanks) do
+		for idx , materializer_tank in pairs(global.tesseract_data[force.index].materializer_tanks) do
 			if valid(materializer_tank.tank) then
 				drain = drain + 5*10^5
+			else
+				force.print("force remove materializer tank ".. idx)
+				global.tesseract_data[force.index].materializer_tanks[idx] = nil
 			end
 		end
-		for _ , desmaterializer_chest in pairs(global.tesseract_data[force.index].desmaterializer_chests) do
+		for idx , desmaterializer_chest in pairs(global.tesseract_data[force.index].desmaterializer_chests) do
 			if valid(desmaterializer_chest) then
 				drain = drain + 5*10^5
+			else
+				force.print("force remove desmaterializer chest ".. idx)
+				global.tesseract_data[force.index].desmaterializer_chests[idx] = nil
 			end
 		end
-		for _ , materializer_chest in pairs(global.tesseract_data[force.index].materializer_chests) do
+		for idx , materializer_chest in pairs(global.tesseract_data[force.index].materializer_chests) do
 			if valid(materializer_chest.chest) then
 				drain = drain + 5*10^5
+			else
+				force.print("force remove materializer chest ".. idx)
+				if valid(global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number].m_connector) then
+					global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number].m_connector.destroy()
+				end
+				if valid(global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number].connector_pole)then
+					global.tesseract_data[force.index].materializer_chests[evt.entity.unit_number].connector_pole.destroy()
+				end
+				global.tesseract_data[force.index].materializer_chests[idx] = nil
 			end
 		end
 		
-		for _ , teleporter in pairs(global.tesseract_data[force.index].teleports) do
+		for idx , teleporter in pairs(global.tesseract_data[force.index].teleports) do
 			if valid(teleporter.teleporter) then
 				drain = drain + 5*10^6
+			else
+				force.print("force remove teleporter ".. idx)
+				global.tesseract_data[force.index].teleports[idx] = nil
 			end
 		end
 		force_MD[force.index].energyDrain = drain
@@ -681,6 +714,11 @@ local function on_load()
 	for _ , force in pairs(game.forces) do
 		if valid(force) and force.name ~= "enemy" and force.name ~= "neutral" then
 			fill_MD(force)
+			for _ , player in pairs(force.players) do
+				if valid(player.gui.screen.tesseractGUI) then
+					recreate_player_GUI(player)
+				end
+			end
 		end
 	end
 end
@@ -698,6 +736,7 @@ local function on_tick(evt)
 end
 
 local function on_change()
+	--game.print("on change")
 	for _ , force in pairs(game.forces) do
 		if valid(force) and force.name ~= "enemy" and force.name ~= "neutral" then
 			for idx , item in pairs(global.tesseract_data[force.index].storages) do
@@ -716,7 +755,11 @@ local function on_change()
 				connector.get_or_create_control_behavior().parameters = nil
 			end
 			
-			
+			if game.active_mods["CW-orbital-solar-power"] == nil then
+				global.tesseract_data[force.index].satellites = 0
+				--calc_energy_production(force)
+				--game.print("removed solar")
+			end
 			for idx , materializer_chest in pairs(global.tesseract_data[force.index].materializer_chests) do
 				if valid(materializer_chest.chest) then
 					if not valid(materializer_chest.m_connector) then
@@ -777,6 +820,18 @@ local function join(evt)
 	end
 end
 
+
+local function rocket_launch(evt)
+	local cargo = evt.rocket.get_inventory(defines.inventory.rocket)
+	local force = evt.rocket.force
+	if cargo.get_item_count("CW-ts-solar-satellite") > 0 then
+		--game.print("solar-satellite")
+		global.tesseract_data[force.index].satellites = global.tesseract_data[force.index].satellites + 1
+		calc_energy_production(force)
+	end
+end
+
+
 local build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built, defines.events.script_raised_revive}
 script.on_event(build_events, on_built)
 
@@ -799,7 +854,7 @@ script.on_event(defines.events.on_player_driving_changed_state, teleport)
 
 script.on_event(defines.events.on_player_joined_game,join)
 
-
+script.on_event(defines.events.on_rocket_launched,  rocket_launch )
 
 
 

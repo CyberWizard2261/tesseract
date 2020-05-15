@@ -388,4 +388,67 @@ data:extend
 })
 
 
+if mods["CW-orbital-solar-power"] then
+	data:extend
+	({
+		{
+			type = "technology",
+			name = "CW-tesseract-solar-satellite",
+			icon_size = 128,
+			icon = "__CW-orbital-solar-power__/graphics/tech/solar-power.png",
+			prerequisites = {"CW-tesseract-energy-distribution-2", "CW-orbital-solar-power"},
+			unit = 
+			{
+				count = 100,
+				ingredients =
+				{
+					{"CW-ts-fragment",1},
+				},
+				time = 10,
+			},
+
+			effects = 
+			{
+				{
+					type = "unlock-recipe",
+					recipe = "CW-ts-solar-satellite",
+				},
+			},
+
+		},
+		
+	})
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

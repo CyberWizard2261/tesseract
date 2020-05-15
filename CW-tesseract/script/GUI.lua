@@ -6,14 +6,15 @@ function recreate_player_GUI(player)
 	if gui_location == nil then
 		gui_location = {1,1}
 	end
-	player.gui.screen.add({type = "frame", name = "tesseractGUI", direction = "vertical", caption = {"GUIdescription.tesseractGUI"} ,tooltip = {"GUIdescription.ts-hide-window-tip"} })
+	player.gui.screen.add({type = "frame", name = "tesseractGUI", direction = "vertical", caption = {"GUIdescription.ts-tesseractGUI"} ,tooltip = {"GUIdescription.ts-hide-window-tip"} })
 	player.gui.screen.tesseractGUI.location = gui_location
 	player.gui.screen.tesseractGUI.add({type = "label", name = "energy", caption = "0MJ/0MJ", tooltip = {"GUIdescription.ts-energy-tip"}})
 	player.gui.screen.tesseractGUI.add({type = "progressbar", name = "energyBar", value = 0, tooltip = {"GUIdescription.ts-energy-tip"}})
 	player.gui.screen.tesseractGUI.add({type = "label", name = "inventory", caption = "0/0", tooltip = {"GUIdescription.ts-inventory-tip"}})
 	player.gui.screen.tesseractGUI.add({type = "progressbar", name = "inventoryBar", value = 0, tooltip = {"GUIdescription.ts-inventory-tip"}})
-	player.gui.screen.tesseractGUI.add({type = "button", name = "CWInventoryDetail",caption = {"GUIdescription.ts-inventory"}})
-	
+	player.gui.screen.tesseractGUI.add({type = "table", name = "table", column_count = 2})
+	player.gui.screen.tesseractGUI.table.add({type = "button", name = "CWInventoryDetail",caption = {"GUIdescription.ts-inventory"}})
+	player.gui.screen.tesseractGUI.table.add({type = "button", name = "CWPowerDetail",caption = {"GUIdescription.ts-power"}})
 end
 function create_GUI(force)
 	
@@ -42,16 +43,16 @@ function destroyAllGUIs(force)
 end
 
 local function update_storage_GUI(player)
-	player.gui.center.tsStorage.table1.scrollNormal.normal.clear()
-	player.gui.center.tsStorage.table1.scrollInfinite.infinite.clear()
+	player.gui.center.tsStorageGUI.table1.scrollNormal.normal.clear()
+	player.gui.center.tsStorageGUI.table1.scrollInfinite.infinite.clear()
 	local enabled = force_MD[player.force.index].infinite_storages < global.tesseract_data[player.force.index].max_infinite_storages
 	
 	for _ , tank in pairs(global.tesseract_data[player.force.index].tanks) do
-		local tip = {"GUIdescription.CW-fluid-tip", format_num(tank.temperature), game.fluid_prototypes[tank.name].localised_name}
+		local tip = {"GUIdescription.ts-fluid-tip", format_num(tank.temperature), game.fluid_prototypes[tank.name].localised_name}
 		if tank.infinite then
-			player.gui.center.tsStorage.table1.scrollInfinite.infinite.add({type = "sprite-button", sprite = "fluid/" .. tank.name, name = "CWfluid" .. tank.name , number = tank.fluid_count, tooltip = tip })
+			player.gui.center.tsStorageGUI.table1.scrollInfinite.infinite.add({type = "sprite-button", sprite = "fluid/" .. tank.name, name = "CWfluid" .. tank.name , number = tank.fluid_count, tooltip = tip })
 		elseif tank.fluid_count > 0 then
-			player.gui.center.tsStorage.table1.scrollNormal.normal.add({type = "sprite-button", sprite = "fluid/" .. tank.name,name = "CWfluid" .. tank.name , number = tank.fluid_count, enabled = enabled, tooltip = tip})
+			player.gui.center.tsStorageGUI.table1.scrollNormal.normal.add({type = "sprite-button", sprite = "fluid/" .. tank.name,name = "CWfluid" .. tank.name , number = tank.fluid_count, enabled = enabled, tooltip = tip})
 		end
 	end
 	
@@ -59,9 +60,9 @@ local function update_storage_GUI(player)
 	
 		local tip = game.item_prototypes[storage.name].localised_name 
 		if storage.infinite then
-			player.gui.center.tsStorage.table1.scrollInfinite.infinite.add({type = "sprite-button", sprite = "item/" .. storage.name,name = "CWitem" .. storage.name , number = storage.item_count, tooltip = tip })
+			player.gui.center.tsStorageGUI.table1.scrollInfinite.infinite.add({type = "sprite-button", sprite = "item/" .. storage.name,name = "CWitem" .. storage.name , number = storage.item_count, tooltip = tip })
 		elseif storage.item_count > 0 then
-			player.gui.center.tsStorage.table1.scrollNormal.normal.add({type = "sprite-button", sprite = "item/" .. storage.name,name = "CWitem" .. storage.name , number = storage.item_count, enabled = enabled, tooltip = tip})
+			player.gui.center.tsStorageGUI.table1.scrollNormal.normal.add({type = "sprite-button", sprite = "item/" .. storage.name,name = "CWitem" .. storage.name , number = storage.item_count, enabled = enabled, tooltip = tip})
 		end
 	end
 end
@@ -85,7 +86,7 @@ function update_GUIs()
 			player.gui.screen.tesseractGUI.inventory.caption = (stored .. "/" .. maxStorage)
 			player.gui.screen.tesseractGUI.inventoryBar.value = storage_percent
 		end
-		if valid(player.gui.center.tsStorage) then
+		if valid(player.gui.center.tsStorageGUI) then
 			update_storage_GUI(player)
 		end
 	end
@@ -93,41 +94,182 @@ end
 
 
 local function create_inventory_GUI(player)
-	if player.gui.center.tsStorage == nil then
-		player.gui.center.add({type = "frame", name = "tsStorage", direction = "vertical", caption = {"GUIdescription.tsStorage"}})
-		player.gui.center.tsStorage.style .maximal_height = 500
-		--player.gui.center.tsStorage.add({type = "scroll-pane", name = "scroll" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto-and-reserve-space",})
-		player.gui.center.tsStorage.add({type = "table", name = "table1", column_count = 2, draw_vertical_lines = true, draw_horizontal_lines = true})
-		player.gui.center.tsStorage.table1.add({type = "label", caption = "normal storage",tooltip = {"GUIdescription.makeInfinite"}})
-		player.gui.center.tsStorage.table1.add({type = "label", caption = "infinite",tooltip = {"GUIdescription.makeNormal"}})
-		player.gui.center.tsStorage.table1.add({type = "scroll-pane", name = "scrollNormal" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto",})
-		player.gui.center.tsStorage.table1.add({type = "scroll-pane", name = "scrollInfinite" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto",})
-		player.gui.center.tsStorage.table1.scrollNormal.add({type = "table", name = "normal", column_count = 10,})
-		player.gui.center.tsStorage.table1.scrollInfinite.add({type = "table", name = "infinite", column_count = 5,})
-		player.gui.center.tsStorage.add({type = "button", name = "CWInventoryOK",caption = "OK" })
+	if player.gui.center.tsStorageGUI == nil then
+		player.gui.center.add({type = "frame", name = "tsStorageGUI", direction = "vertical", caption = {"GUIdescription.ts-storage-GUI"}})
+		player.gui.center.tsStorageGUI.style .maximal_height = 500
+		--player.gui.center.tsStorageGUI.add({type = "scroll-pane", name = "scroll" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto-and-reserve-space",})
+		player.gui.center.tsStorageGUI.add({type = "table", name = "table1", column_count = 2, draw_vertical_lines = true, draw_horizontal_lines = true})
+		player.gui.center.tsStorageGUI.table1.add({type = "label", caption = {"GUIdescription.ts-normal-storage"},tooltip = {"GUIdescription.ts-make-infinite-tip"}})
+		player.gui.center.tsStorageGUI.table1.add({type = "label", caption = {"GUIdescription.ts-infinite-storage"},tooltip = {"GUIdescription.ts-make-normal-tip"}})
+		player.gui.center.tsStorageGUI.table1.add({type = "scroll-pane", name = "scrollNormal" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto",})
+		player.gui.center.tsStorageGUI.table1.add({type = "scroll-pane", name = "scrollInfinite" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto",})
+		player.gui.center.tsStorageGUI.table1.scrollNormal.add({type = "table", name = "normal", column_count = 10,})
+		player.gui.center.tsStorageGUI.table1.scrollInfinite.add({type = "table", name = "infinite", column_count = 5,})
+		player.gui.center.tsStorageGUI.add({type = "button", name = "CWInventoryOK",caption = "OK" })
 		update_storage_GUI(player)
 	end
+end
+
+local function power_details_gui(player)
+	if valid(player.gui.center.tsPowerGUI) then
+		player.gui.center.tsPowerGUI.destroy()
+	end
+	local force = player.force
+	player.gui.center.add({type = "frame", name = "tsPowerGUI", direction = "vertical", caption = {"GUIdescription.ts-power-GUI"}})
+	player.gui.center.tsPowerGUI.add({type = "scroll-pane", name = "scroll" , horizontal_scroll_policy = "never", vertical_scroll_policy = "auto"})
+	player.gui.center.tsPowerGUI.scroll.add({type = "table", name = "table1", column_count = 6,})
+	
+	
+	if game.active_mods["CW-orbital-solar-power"] ~= nil then
+		local number = global.tesseract_data[force.index].satellites
+		player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-solar-satellite",number = number, tooltip = {"GUIdescription.ts-solar-stellite-tip"}})
+		local energyProduction = format_num(force_MD[player.force.index].energyProduction,"W")
+		local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = energyProduction})
+		label.style.font_color = {r = 0, g = 0.5, b = 1, a = 1}
+		
+	end
+	
+	
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-tesseract",number = 1, tooltip = {"GUIdescription.ts-tesseract-tip"}})
+	local TesseractConsumption = global.tesseract_data[force.index].maxStorage * 2 + 
+								global.tesseract_data[force.index].maxEnergy*2 / 10^4 + 
+								global.tesseract_data[force.index].max_infinite_storages * 10^6
+	
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(TesseractConsumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+	
+	
+	local number = 0
+	local consumption = 0
+	for _ , leech in pairs(global.tesseract_data[force.index].power_leeches) do
+		number = number +1
+		if leech.pole.name == "CW-ts-power-leech-pole-1" then
+			consumption = consumption + 10^5
+		elseif leech.pole.name == "CW-ts-power-leech-pole-2" then
+			consumption = consumption + 5*10^5
+		elseif leech.pole.name == "CW-ts-power-leech-pole-3" then
+			consumption = consumption + 25*10^5
+		elseif leech.pole.name == "CW-ts-power-leech-pole-4" then
+			consumption = consumption + 125*10^5
+		end
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-power-leech-pole-1",number = number, tooltip = {"GUIdescription.ts-power-leech-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+
+
+
+
+	number = 0
+	consumption = 0
+	for _ , source in pairs(global.tesseract_data[force.index].power_sources) do
+		number = number +1
+		if source.pole.name == "CW-ts-power-source-pole-1" then
+			consumption = consumption + 10^5
+		elseif source.pole.name == "CW-ts-power-source-pole-2" then
+			consumption = consumption + 5*10^5
+		elseif source.pole.name == "CW-ts-power-source-pole-3" then
+			consumption = consumption + 25*10^5
+		elseif source.pole.name == "CW-ts-power-source-pole-4" then
+			consumption = consumption + 125*10^5
+		end
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-power-source-pole-1",number = number, tooltip = {"GUIdescription.ts-power-source-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+
+
+
+
+	number = 0
+	consumption = 0
+	for _ , desmaterializer_chest in pairs(global.tesseract_data[force.index].desmaterializer_chests) do
+		number = number +1
+		consumption = consumption + 5*10^5
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-desmaterializer-chest",number = number, tooltip = {"GUIdescription.ts-desmaterializer-chest-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+	
+	
+	number = 0
+	consumption = 0
+	for _ , materializer_chest in pairs(global.tesseract_data[force.index].materializer_chests) do
+		number = number +1
+		consumption = consumption + 5*10^5
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-materializer-chest",number = number, tooltip = {"GUIdescription.ts-materializer-chest-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+
+	
+	
+	number = 0
+	consumption = 0
+	for _ , desmaterializer_tank in pairs(global.tesseract_data[force.index].desmaterializer_tanks) do
+		number = number +1
+		consumption = consumption + 5*10^5
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-desmaterializer-tank",number = number, tooltip = {"GUIdescription.ts-desmaterializer-tank-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+
+
+	number = 0
+	consumption = 0
+	for _ , materializer_tank in pairs(global.tesseract_data[force.index].materializer_tanks) do
+		number = number +1
+		consumption = consumption + 5*10^5
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-materializer-tank",number = number, tooltip = {"GUIdescription.ts-materializer-tank-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+
+
+
+	number = 0
+	consumption = 0
+	for _ , teleporter in pairs(global.tesseract_data[force.index].teleports) do
+		number = number +1
+		consumption = consumption + 5*10^6
+	end
+	player.gui.center.tsPowerGUI.scroll.table1.add({type = "sprite-button", sprite = "item/CW-ts-teleporter",number = number, tooltip = {"GUIdescription.ts-teleporter-tip"}})
+	local label = player.gui.center.tsPowerGUI.scroll.table1.add({type = "label", caption = format_num(consumption,"W")})
+	label.style.font_color = {r = 1, g = 0, b = 0, a = 1}
+
+	
+
+
+
+
+
+
+
+
+
+	player.gui.center.tsPowerGUI.add({type = "button", name = "CWPowerOK",caption = "OK" })
 end
 
 local function on_gui_click(evt)
 	local player = game.get_player(evt.player_index)
 	if evt.element.name == "CWInventoryDetail" then
 		create_inventory_GUI(player)
+		
+	elseif evt.element.name == "CWPowerOK" then
+		if valid(player.gui.center.tsPowerGUI) then
+			player.gui.center.tsPowerGUI.destroy()
+		end
+	
 	elseif evt.element.name == "CWInventoryOK" then
+		if valid(player.gui.center.tsStorageGUI) then
+			player.gui.center.tsStorageGUI.destroy()
+		end
 		if valid(player.gui.center.tsStorage) then
 			player.gui.center.tsStorage.destroy()
 		end
---[[
-	elseif evt.element.name == "CWMaterializerChestOK" then
-		if valid(player.gui.center.MaterializerChest) then
-			local selected_entity = player_MD[player.index].selected_entity
-			if valid(selected_entity) then
-				global.tesseract_data[player.force.index].materializer_chests[selected_entity.unit_number].request = player.gui.center.MaterializerChest.table.requestdItem.elem_value
-				global.tesseract_data[player.force.index].materializer_chests[selected_entity.unit_number].requestCount = tonumber(player.gui.center.MaterializerChest.table.count.text)
-			end
-			player.gui.center.MaterializerChest.destroy()
-		end
---]]
+	elseif evt.element.name == "CWPowerDetail"then
+		power_details_gui(player)
+		
 	elseif evt.element.name == "CWMaterializerTankOK" then
 		if valid(player.gui.center.MaterializerTank) then
 			local selected_entity = player_MD[player.index].selected_entity
@@ -183,23 +325,12 @@ local function on_gui_click(evt)
 		force_MD[player.force.index].recountItems = true
 	end
 end
---[[
-local function gui_materizer_chest(player , main_entity)
-	if player.force == main_entity.force and player.gui.center.MaterializerChest == nil then 
-		player.gui.center.add({type = "frame", name = "MaterializerChest", direction = "vertical", caption = {"GUIdescription.MaterializerChest"}})
-		player.gui.center.MaterializerChest.add({type = "table",name = "table", column_count = 2})
-		player.gui.center.MaterializerChest.table.add({type = "choose-elem-button", name = "requestdItem", elem_type = "item"})
-		player.gui.center.MaterializerChest.table.requestdItem.elem_value = global.tesseract_data[player.force.index].materializer_chests[main_entity.unit_number].request
-		player.gui.center.MaterializerChest.table.add({type = "textfield", name = "count" , numeric = true, allow_decimal = false, allow_negative = false, clear_and_focus_on_right_click  = true })
-		player.gui.center.MaterializerChest.table.count.text = global.tesseract_data[player.force.index].materializer_chests[main_entity.unit_number].requestCount
-		player.gui.center.MaterializerChest.add({type = "button", name = "CWMaterializerChestOK",caption = "OK" })
-	
-	end
-end
---]]
+
+
+
 local function gui_materizer_tank(player , main_entity)
 	if player.force == main_entity.force and player.gui.center.MaterializerTank == nil then 
-		player.gui.center.add({type = "frame", name = "MaterializerTank", direction = "vertical", caption = {"GUIdescription.MaterializerTank"}})
+		player.gui.center.add({type = "frame", name = "MaterializerTank", direction = "vertical", caption = {"GUIdescription.ts-materializer-tank"}})
 		player.gui.center.MaterializerTank.add({type = "choose-elem-button", name = "requestdfluid", elem_type = "fluid",})
 		player.gui.center.MaterializerTank.requestdfluid.elem_value = global.tesseract_data[player.force.index].materializer_tanks[main_entity.unit_number].request
 		player.gui.center.MaterializerTank.add({type = "button", name = "CWMaterializerTankOK",caption = "OK" })

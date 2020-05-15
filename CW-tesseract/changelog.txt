@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.2
+  Changes:
+    - fixed missing localization
+---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+  Changes:
+    - fixed a bug with power details window
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+  Changes:
+    - localization fixes
+    - added a power details window
+    - if Orbital Solar Power is enabled it adds a Tesseract version of solar satellite
+---------------------------------------------------------------------------------------------------
 Version: 0.0.11
   Changes:
     - localization fixes
