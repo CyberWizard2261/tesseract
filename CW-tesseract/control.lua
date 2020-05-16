@@ -824,7 +824,7 @@ end
 local function rocket_launch(evt)
 	local cargo = evt.rocket.get_inventory(defines.inventory.rocket)
 	local force = evt.rocket.force
-	if cargo.get_item_count("CW-ts-solar-satellite") > 0 then
+	if  game.active_mods["CW-orbital-solar-power"] and cargo.get_item_count("CW-ts-solar-satellite") > 0 then
 		--game.print("solar-satellite")
 		global.tesseract_data[force.index].satellites = global.tesseract_data[force.index].satellites + 1
 		calc_energy_production(force)

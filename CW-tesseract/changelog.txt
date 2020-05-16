@@ -2,6 +2,7 @@
 Version: 0.1.2
   Changes:
     - fixed missing localization
+    - fixed a bug when lauching a rocket whithout orbital solar power
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.1
   Changes:
