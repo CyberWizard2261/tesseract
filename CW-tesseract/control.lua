@@ -636,31 +636,6 @@ local function on_remove(evt)
 end
 
 
-local function on_research(evt)
-	local tech = evt.research 
-	local force = tech.force
-	if tech.name == "CW-tesseract-energy-capacity" then
-		global.tesseract_data[force.index].maxEnergy = 10^9 + (tech.level -1) * 10^8
-		calc_energy_consumption(force)
-	elseif tech.name == "CW-tesseract-infinite-storage" then
-		global.tesseract_data[force.index].max_infinite_storages = (tech.level -1)
-		calc_energy_consumption(force)
-		
-	elseif tech.name == "CW-tesseract-storage-capacity" then
-		global.tesseract_data[force.index].maxStorage = 10^5 + (tech.level -1) * 10^4
-		calc_energy_consumption(force)
-		if 10^5 + (tech.level) * 10^4 > 2.1*10^9 then
-			force.print("max storage max level")
-			force.technologies["CW-tesseract-storage-capacity"].enabled = false
-			force.research_queue = nil
-		end
-	elseif tech.name == "CW-tesseract-logistics" then
-		global.tesseract_data[force.index].maxStorage = 10^5
-		calc_energy_consumption(force)
-	end
-	
-end
-
 
 
 
@@ -705,6 +680,33 @@ local function force_created(evt)
 end
 
 
+
+local function on_research(evt)
+	local tech = evt.research 
+	local force = tech.force
+	if force.name == "enemy" or force.name == "neutral" then return end
+
+	if tech.name == "CW-tesseract-energy-capacity" then
+		global.tesseract_data[force.index].maxEnergy = 10^9 + (tech.level -1) * 10^8
+		calc_energy_consumption(force)
+	elseif tech.name == "CW-tesseract-infinite-storage" then
+		global.tesseract_data[force.index].max_infinite_storages = (tech.level -1)
+		calc_energy_consumption(force)
+		
+	elseif tech.name == "CW-tesseract-storage-capacity" then
+		global.tesseract_data[force.index].maxStorage = 10^5 + (tech.level -1) * 10^4
+		calc_energy_consumption(force)
+		if 10^5 + (tech.level) * 10^4 > 2.1*10^9 then
+			force.print("max storage max level")
+			force.technologies["CW-tesseract-storage-capacity"].enabled = false
+			force.research_queue = nil
+		end
+	elseif tech.name == "CW-tesseract-logistics" then
+		global.tesseract_data[force.index].maxStorage = 10^5
+		calc_energy_consumption(force)
+	end
+	
+end
 
 
 
