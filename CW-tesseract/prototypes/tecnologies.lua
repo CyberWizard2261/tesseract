@@ -267,6 +267,10 @@ data:extend
 				type = "unlock-recipe",
 				recipe = "CW-ts-logistic-desmaterializer-chest",
 			},
+			{
+				type = "unlock-recipe",
+				recipe = "CW-ts-logistic-equip",
+			},
 		},
 
 	},

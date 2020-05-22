@@ -315,7 +315,7 @@ data:extend
 		
 		stack_size = 20,
 		subgroup = "CW-ts-equip",
-		order = "a1",
+		order = "a2",
 		placed_as_equipment_result = "CW-ts-portable-source-2"
 	},
 	{
@@ -326,8 +326,19 @@ data:extend
 		
 		stack_size = 20,
 		subgroup = "CW-ts-equip",
-		order = "a1",
+		order = "a3",
 		placed_as_equipment_result = "CW-ts-portable-source-3"
+	},
+	{
+		type = "item",
+		name = "CW-ts-logistic-equip",
+		icon = "__CW-tesseract__/graphics/icons/logistic-module.png",
+		icon_size = 64,
+		
+		stack_size = 10,
+		subgroup = "CW-ts-equip",
+		order = "b1",
+		placed_as_equipment_result = "CW-ts-logistic-equip"
 	},
 	
 })

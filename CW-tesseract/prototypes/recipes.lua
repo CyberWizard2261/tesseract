@@ -417,6 +417,21 @@ data:extend
 		},
 		result = "CW-ts-portable-source-3",
 	},
+
+	{
+		type = "recipe",
+		name = "CW-ts-logistic-equip",
+		enabled = false,
+		energy_required = 2,
+		category ="crafting",
+
+		ingredients =
+		{
+			{"CW-ts-fragment",10},
+			{"advanced-circuit",50},
+		},
+		result = "CW-ts-logistic-equip",
+	},
 	
 })
 
