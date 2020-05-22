@@ -326,6 +326,74 @@ local function materialize_fluids(force)
 	end
 end
 
+local function suply_players(force)
+	for _, player in pairs(force.connected_players) do
+		if valid(player) and valid(player.character) and player_MD[player.index].logistic_equip then
+			for slot = 1 , player.character_logistic_slot_count, 1 do
+				
+				if player.get_personal_logistic_slot(slot).name ~= nil then
+					-- remove excess
+					local item = player.get_personal_logistic_slot(slot).name
+					local bag_content = player.get_item_count(item)
+					if bag_content > player.get_personal_logistic_slot(slot).max then
+						local number = bag_content - player.get_personal_logistic_slot(slot).max
+						
+						if global.tesseract_data[force.index].storages[item] == nil then
+							local transfer = math.floor(math.min((global.tesseract_data[force.index].maxStorage - force_MD[force.index].item_count),number))
+							if transfer > 0 then
+								global.tesseract_data[force.index].storages[item] = {name = item , item_count = transfer, infinite = false }
+								force_MD[force.index].item_count = force_MD[force.index].item_count + transfer
+								player.remove_item({name = item , count = transfer})
+							end
+						elseif global.tesseract_data[force.index].storages[item].infinite then
+							local transfer = number
+							if global.tesseract_data[force.index].storages[item].item_count + transfer < 2.1*10^9 then
+								global.tesseract_data[force.index].storages[item].item_count = global.tesseract_data[force.index].storages[item].item_count + transfer
+								player.remove_item({name = item , count = transfer})
+							end
+						else
+							local transfer = math.floor(math.min((global.tesseract_data[force.index].maxStorage - force_MD[force.index].item_count),number))
+							if transfer > 0 then
+								force_MD[force.index].item_count = force_MD[force.index].item_count + transfer
+								global.tesseract_data[force.index].storages[item].item_count = global.tesseract_data[force.index].storages[item].item_count + transfer
+								player.remove_item({name = item , count = transfer})
+							end
+						end
+					elseif bag_content < player.get_personal_logistic_slot(slot).min then
+						-- draw items from Tesseract to player
+						local inventory = player.get_main_inventory()
+						local request = player.get_personal_logistic_slot(slot).min
+						
+						local insertable = inventory.get_insertable_count(item)
+						local ts_stored = 0
+						if global.tesseract_data[force.index].storages[item] ~= nil then
+							ts_stored = global.tesseract_data[force.index].storages[item].item_count
+						end
+						local content = inventory.get_contents()
+						local inventoryContent = 0
+						if content[item] ~= nil then
+							inventoryContent = content[item]
+						end
+						
+						local request_count = request - inventoryContent
+						
+						--player.print("request_count " .. request_count .. " ts_stored " .. ts_stored .. " insertable " ..insertable)
+						
+						local transfer = math.min(request_count , ts_stored, insertable)
+						if transfer > 0 then
+							global.tesseract_data[force.index].storages[item].item_count = global.tesseract_data[force.index].storages[item].item_count - transfer
+							inventory.insert({name = item, count = transfer })
+							if not global.tesseract_data[force.index].storages[item].infinite then
+								force_MD[force.index].item_count = force_MD[force.index].item_count - transfer
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 local function updateTesseracts()
 	for _ , force in pairs(game.forces) do
 		if valid(force) and force.name ~= "enemy" and force.name ~= "neutral" then
@@ -333,13 +401,14 @@ local function updateTesseracts()
 				TS_update(force)
 				leech_power(force)
 				produce_power(force)
-				recharge_equip(force)
-				provide_power(force)
-				make_fragments(force)
+				suply_players(force)
 				materialize_fluids(force)
 				materialize_items(force)
 				desmaterialize_fluids(force)
 				desmaterialize_items(force)
+				recharge_equip(force)
+				provide_power(force)
+				make_fragments(force)
 				cont_items(force)
 			end
 		end
@@ -447,6 +516,9 @@ local function calc_energy_consumption(force)
 				global.tesseract_data[force.index].teleports[idx] = nil
 			end
 		end
+		
+		drain = drain + force_MD[force.index].logistic_equip * 10^6
+		
 		force_MD[force.index].energyDrain = drain
 	end
 	
@@ -637,16 +709,35 @@ end
 
 
 
+local function count_logistic_equip(player)
+	if valid(player.character) and valid(player.character.grid) then
+		local grid_content = player.character.grid.get_contents()
+		if grid_content["CW-ts-logistic-equip"] ~= nil  then
+			return grid_content["CW-ts-logistic-equip"]
+		end
+	end
+	return 0
+end
+
+
+
 
 
 local function fill_MD(force)
-	force_MD[force.index] = {item_count = 0, energyProduction = 0, energyDrain = 0, infinite_storages = 0}
+	force_MD[force.index] = {item_count = 0, energyProduction = 0, energyDrain = 0, infinite_storages = 0,logistic_equip = 0}
 	for _ , player in pairs(force.players) do
-		player_MD[player.index] = {selected_entity = nil}
+		player_MD[player.index] = {selected_entity = nil, logistic_equip = false}
+		if count_logistic_equip(player) > 0 then
+			player_MD[player.index].logistic_equip = true
+			force_MD[force.index].logistic_equip = force_MD[force.index].logistic_equip + 1
+		end
 	end
 	calc_energy_consumption(force)
 	calc_energy_production(force)
 end
+
+
+
 
 local function init_force(force)
 	if valid(force) and force.name ~= "enemy" and force.name ~= "neutral" then
@@ -708,9 +799,9 @@ local function on_research(evt)
 	
 end
 
-
-
-
+local function update_printers()
+	
+end
 
 local function on_load()
 	for _ , force in pairs(game.forces) do
@@ -728,12 +819,15 @@ end
 local function on_tick(evt)
 	if game_load then
 		on_load()
-		
 		game_load = false
 	end
+	
+	
 	if (evt.tick % 60) == 10 then
 		updateTesseracts()
 		update_GUIs()
+	elseif (evt.tick % 60) == 40 then
+		update_printers()
 	end
 end
 
@@ -795,21 +889,39 @@ end
 
 local function place_equip(evt)
 	if evt.equipment.name == "CW-ts-portable-source-1" or evt.equipment.name == "CW-ts-portable-source-2" or evt.equipment.name == "CW-ts-portable-source-3" then
-		local force = game.get_player(evt.player_index)
+		local force = game.get_player(evt.player_index).force
 		table.insert(global.tesseract_data[force.index].equips,evt.equipment)
+	elseif evt.equipment.name == "CW-ts-logistic-equip" then
+		local player = game.get_player(evt.player_index)
+		local equip_number = count_logistic_equip(player)
+		if equip_number > 1 then
+			local taken = evt.grid.take{equipment = evt.equipment}
+			player.insert(taken)
+			player.print({"gui-msg.ts-cant-insert-equip"})
+		end
+		fill_MD(player.force)
 	end
 end
+
+
+local function remove_equip(evt)
+	local player = game.get_player(evt.player_index)
+	if evt.equipment == "CW-ts-logistic-equip" then
+		fill_MD(player.force)
+	end
+end
+
+
 
 local function teleport(evt)
 	if valid(evt.entity) and evt.entity.name == "CW-ts-teleporter" then
 		local player = game.get_player(evt.player_index)
 		local teleporter = evt.entity
-		if valid(teleporter) then
-			local destination = global.tesseract_data[player.force.index].teleports[teleporter.unit_number].destination
-			teleporter.set_driver(nil)
-			if valid(destination) and global.tesseract_data[evt.entity.force.index].tesseract ~= nil and valid(global.tesseract_data[evt.entity.force.index].tesseract.altar)  then
-				player.teleport(destination.position,destination.surface)
-			end
+		
+		local destination = global.tesseract_data[player.force.index].teleports[teleporter.unit_number].destination
+		teleporter.set_driver(nil)
+		if valid(destination) and global.tesseract_data[evt.entity.force.index].tesseract ~= nil and valid(global.tesseract_data[evt.entity.force.index].tesseract.altar)  then
+			player.teleport(destination.position,destination.surface)
 		end
 		
 	end
@@ -834,6 +946,11 @@ local function rocket_launch(evt)
 end
 
 
+local function change_armor(evt)
+	local player = game.get_player(evt.player_index)
+	fill_MD(player.force)
+end
+
 local build_events = {defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built, defines.events.script_raised_revive}
 script.on_event(build_events, on_built)
 
@@ -847,9 +964,13 @@ script.on_event(defines.events.on_tick, on_tick)
 script.on_init(on_init)
 
 script.on_configuration_changed(on_change)
+
 script.on_event(defines.events.on_force_created,force_created)
 
+script.on_event(defines.events.on_player_armor_inventory_changed,change_armor)
 
+
+script.on_event(defines.events.on_player_removed_equipment, remove_equip)
 script.on_event(defines.events.on_player_placed_equipment, place_equip)
 
 script.on_event(defines.events.on_player_driving_changed_state, teleport)

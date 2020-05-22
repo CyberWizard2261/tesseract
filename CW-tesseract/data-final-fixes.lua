@@ -1,11 +1,12 @@
--- Make Lab accept all materials --
---[[
-local inputsTable = {}
-for k, lab in pairs(data.raw.lab) do
-	for k, name in pairs(lab.inputs) do
-		inputsTable[name] = name
+
+require("prototypes.tecnologies")
+for _, armor in pairs(data.raw.armor) do
+	if armor.equipment_grid ~= nil then
+		local grid = table.deepcopy(data.raw["equipment-grid"][armor.equipment_grid])
+		grid.name = "CW-ts-"..grid.name
+		table.insert(grid.equipment_categories, "CW-ts-logistic")
+		armor.equipment_grid = grid.name
+	
+		data:extend({grid})
 	end
 end
-data.raw.lab["CW-ts-lab"].inputs = inputsTable
---]]
-require("prototypes.tecnologies")

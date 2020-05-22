@@ -81,5 +81,32 @@ data:extend
 		
 		categories = {"armor"},
 	},
+	{
+		type = "battery-equipment",
+		name = "CW-ts-logistic-equip",
+		sprite =
+		{
+			filename = "__CW-tesseract__/graphics/equip/logistic-module.png",
+			width = 128,
+			height = 128,
+			priority = "medium",
+		},
+		shape =
+		{
+			width = 4,
+			height = 4,
+			type = "full"
+		},
+		energy_source =
+		{
+			type = "electric",
+			usage_priority = "tertiary",
+			buffer_capacity = "10J",
+			input_flow_limit = "1W",
+			output_flow_limit = "1W"
+		},
+		
+		categories = {"CW-ts-logistic"},
+	},
 
 })

@@ -52,6 +52,11 @@ data:extend
 		order = "r"
 	},
 
+	{
+		type = "equipment-category",
+		name = "CW-ts-logistic",
+	}
+
 })
 
 
